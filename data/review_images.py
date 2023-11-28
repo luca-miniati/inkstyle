@@ -1,18 +1,22 @@
 import os
 import pygame
-from pygame.locals import QUIT, KEYDOWN, K_RIGHT, K_DOWN
 from PIL import Image
+from data import TattooImageFiles
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument("-s", "--style")
+parser.add_argument("-a", "--account")
+args = parser.parse_args()
 
 class ImageReviewApp:
-    def __init__(self):
+    def __init__(self, dataset_path, args=None):
         pygame.init()
 
-        self.image_folder_path = ""
-        self.image_list = []
+        self.dataset_path = dataset_path
+        self.images = []
         self.marked_images = []
-        self.current_index = 0
-
-        self.load_images()
+        self.current_index = -1
 
         self.screen = pygame.display.set_mode((800, 600))
         pygame.display.set_caption("Image Review App")
@@ -20,66 +24,95 @@ class ImageReviewApp:
         self.clock = pygame.time.Clock()
 
         self.font = pygame.font.Font(None, 36)
+        self.tattoo_image_files = TattooImageFiles(self.dataset_path, args)
         self.load_images()
 
     def load_images(self):
-        self.image_folder_path = "your_image_folder_path"
-        if self.image_folder_path:
-            self.image_list = [f for f in os.listdir(self.image_folder_path) if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
+        self.images = self.tattoo_image_files.get_all_images()
 
     def show_next_image(self):
-        if self.image_list:
-            image_path = os.path.join(self.image_folder_path, self.image_list[self.current_index])
-            original_image = Image.open(image_path)
+        self.current_index += 1
+        if self.current_index > len(self.images) - 1:
+            print("No more images")
+            self.current_index -= 1
+        image_path = self.images[self.current_index]
+        self.show_image(image_path)
 
-            # Calculate the scaled size while maintaining aspect ratio
-            base_width = 800
-            base_height = 600
+    def show_prev_image(self):
+        self.current_index -= 1
+        if self.current_index < 0: 
+            self.current_index += 1
+        image_path = self.images[self.current_index]
+        self.show_image(image_path)
 
-            width_percent = base_width / float(original_image.size[0])
-            height_percent = base_height / float(original_image.size[1])
+    def show_image(self, image_path):
+        original_image = Image.open(image_path)
 
-            if width_percent < height_percent:
-                new_width = base_width
-                new_height = int(float(original_image.size[1]) * float(width_percent))
-            else:
-                new_width = int(float(original_image.size[0]) * float(height_percent))
-                new_height = base_height
+        base_width = 800
+        base_height = 600
 
-            # Resize the image
-            image = original_image.resize((new_width, new_height))
+        width_percent = base_width / float(original_image.size[0])
+        height_percent = base_height / float(original_image.size[1])
 
-            # Calculate the position to center the image on the screen
-            x = (base_width - new_width) // 2
-            y = (base_height - new_height) // 2
+        if width_percent < height_percent:
+            new_width = base_width
+            new_height = int(float(original_image.size[1]) * float(width_percent))
+        else:
+            new_width = int(float(original_image.size[0]) * float(height_percent))
+            new_height = base_height
 
-            pygame_image = pygame.image.fromstring(image.tobytes(), image.size, image.mode)
-            self.screen.fill((255, 255, 255))  # Fill the screen with white
-            self.screen.blit(pygame_image, (x, y))
+        image = original_image.resize((new_width, new_height))
 
-            self.current_index = (self.current_index + 1) % len(self.image_list)
+        x = (base_width - new_width) // 2
+        y = (base_height - new_height) // 2
+
+        pygame_image = pygame.image.fromstring(image.tobytes(), image.size, image.mode)
+        self.screen.fill((255, 255, 255))
+        self.screen.blit(pygame_image, (x, y))
+        image_data = self.tattoo_image_files.get_image_data(image_path)
+        print(f"""
+{"*" + "-" * 15 + "*"}
+Style: {image_data["style"]}
+Account: {image_data["account"]} [{self.tattoo_image_files.styles_to_accounts[image_data["style"]].index(image_data["account"])+1}/{len(self.tattoo_image_files.styles_to_accounts[image_data["style"]])}]
+Image: [{self.tattoo_image_files.accounts_to_images[image_data["account"]].index(image_path.split("/")[-1])+1}/{len(self.tattoo_image_files.accounts_to_images[image_data["account"]])}]
+{"MARKED" if image_path in self.marked_images else ""}
+""")
 
     def mark(self):
-        if self.image_list:
-            self.marked_images.append(self.image_list[self.current_index])
+        if self.images[self.current_index] not in self.marked_images:
+            self.marked_images.append(self.images[self.current_index])
+
+    def status(self):
+        self.tattoo_image_files.status()
 
     def main_loop(self):
         running = True
         while running:
             for event in pygame.event.get():
-                if event.type == QUIT:
+                if event.type == pygame.QUIT:
                     running = False
-                elif event.type == KEYDOWN:
-                    if event.key == K_RIGHT:
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_RIGHT:
                         self.show_next_image()
-                    elif event.key == K_DOWN:
+                    elif event.key == pygame.K_LEFT:
+                        self.show_prev_image()
+                    elif event.key == pygame.K_DOWN:
                         self.mark()
-
+                        self.show_next_image()
+                    elif event.key == pygame.K_RETURN:
+                        self.tattoo_image_files.delete_images(self.marked_images)
+                        self.marked_images = []
+                    elif event.key == pygame.K_UP:
+                        if self.images[self.current_index] in self.marked_images:
+                            self.marked_images.remove(self.images[self.current_index])
+                        self.show_next_image()
+    
             pygame.display.flip()
             self.clock.tick(60)
 
         pygame.quit()
 
 if __name__ == "__main__":
-    app = ImageReviewApp()
+    app = ImageReviewApp("images", args)
     app.main_loop()
+

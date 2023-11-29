@@ -1,2 +1,3 @@
-data/embeddings.db
-data/images/
+api/__pycache__/
+api/images/
+api/embeddings.db

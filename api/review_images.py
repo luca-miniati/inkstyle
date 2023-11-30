@@ -1,7 +1,7 @@
 import os
 import pygame
 from PIL import Image
-from data import TattooImageFiles
+from scrape import TattooImageFiles
 import argparse
 
 parser = argparse.ArgumentParser()

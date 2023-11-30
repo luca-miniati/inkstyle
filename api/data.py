@@ -1,148 +1,24 @@
-import os
+import sqlite3
+from torchvision.datasets import ImageFolder
 import glob
 
-def recursive_dict_len(obj):
-    if isinstance(obj, dict):
-        return sum(recursive_len(v) for v in obj.values())
-    elif isinstance(obj, list):
-        return len(obj)
-    else:
-        raise TypeError("What the hell did you pass for `tattoo_accounts`!? I got something that's not a list or dict")
+class TattooImageDataset(ImageFolder):
+    def __getitem__(self, index):
+        path, target = self.samples[index]
+        sample = self.loader(path)
+        if self.transform is not None:
+            sample = self.transform(sample)
+        if self.target_transform is not None:
+            target = self.target_transform(target)
 
-class TattooImageFiles:
-    def __init__(self, dataset_path, args=None):
-        self.dataset_path = dataset_path
-        if "downloaded" in self.dataset_path:
-            if args:
-                if hasattr(args, "style"):
-                    self.style = args.style 
-                else:
-                    self.style = None
-                if hasattr(args, "account"):
-                    self.account = args.account 
-                else:
-                    self.account = None
-            else:
-                self.style = None
-                self.account = None
-            self.configure()
-        elif "cleaned" in self.dataset_path:
-            self.fns = list(glob.glob("images/cleaned/_/*"))
+        return sample, path
 
-    def configure(self):
-        if self.style:
-            self.styles = [self.style]
-        else:
-            self.styles = list(map(lambda style_fn: style_fn.split("/")[-1], glob.glob(f"{self.dataset_path}/*")))
+def save_images(root, conn, cursor):
+    for fn in glob.glob(f"{root}/*"):
+        print("writing: " + fn.split("/")[-1])
+        with open(fn, "rb") as f:
+            image_bytes = f.read()
+        image_fn = fn.split("/")[-1]
 
-        if len(self.styles) == 0:
-            raise ValueError("`dataset_path` returned no style folders")
-        
-        self.accounts = set()
-        self.styles_to_accounts = dict()
-
-        self.images = list()
-        self.accounts_to_images = dict()
-
-        for style in self.styles:
-            if self.account:
-                accounts = [self.account]
-            else:
-                accounts = list(map(
-                    lambda account_fn: account_fn.split("/")[-1],
-                    glob.glob(f"{self.dataset_path}/{style}/*")
-                ))
-
-            self.accounts.update(accounts)
-            self.styles_to_accounts[style] = accounts
-
-            for account in accounts:
-                images = list(map(
-                    lambda image_fn: image_fn.split("/")[-1],
-                    glob.glob(f"{self.dataset_path}/{style}/{account}/*")
-                ))
-                self.images.extend(images)
-                self.accounts_to_images[account] = images
-   
-    def status(self):
-        format_args = [
-            len(self.images),
-            "\n".join([
-                f"{style}: {sum(len(self.accounts_to_images[account]) for account in accounts)}"
-                for style, accounts in self.styles_to_accounts.items()
-            ])
-        ]
-        format_str = """
-Tattoo Image Files
-------------------
-
-Total Images: {}
-
-Styles 
-------
-{}
-
-        """
-
-        print(format_str.format(*format_args))
-
-    def add_accounts(self):
-        from scrape import tattoo_accounts, scrape_images
-        
-        _tattoo_accounts = {
-            style: list(set(accounts) - self.accounts)
-            for style, accounts in tattoo_accounts.items()
-        }
-
-        scrape_images(_tattoo_accounts)
-        self.configure()
-        self.status()
-
-    def clean(self):
-        for style in self.styles:
-            for account in self.styles_to_accounts[style]: 
-                if len(self.accounts_to_images[account]) == 0:
-                    print(f"Deleting account {account}")
-                    os.rmdir(f"{self.dataset_path}/{style}/{account}")
-                for image in self.accounts_to_images[account]:
-                    if image.split(".")[-1] not in ["jpg", "png"]:
-                        os.remove(f"{self.dataset_path}/{style}/{account}/{image}")
-                        print(f"""Deleted "{image}" """)
-        self.configure()
-        self.status()
-
-    def get_all_images(self):
-        images = []
-        for style in self.styles:
-            for account in self.styles_to_accounts[style]: 
-                for image in self.accounts_to_images[account]:
-                    images.append(f"{self.dataset_path}/{style}/{account}/{image}")
-        return images
-
-    def get_image_data(self, image_fn):
-        return {
-            "style": image_fn.split("/")[1], 
-            "account": image_fn.split("/")[2]
-        }
-    
-    def delete_images(self, images):
-        count = 0 
-        for image in images:
-            os.rename(image, f"""removed/{image.split("/")[-1]}""")
-            print(f"""Deleted "{image}" """)
-            count += 1
-
-        print(f"Deleted {count} images")
-
-        self.configure()
-
-    def rename_and_move_images(self, to_path):
-        # DANGEROUS CODE, PLEASE FIX BEFORE THIS FUNCTION IS EVER CALLED
-        accounts_to_counts = {key: 0 for key in self.accounts}
-        for image in self.get_all_images():
-            os.rename(image, f"""{to_path}/{image.split("/")[-2]}_{accounts_to_counts[image.split("/")[-2]]}""")
-            accounts_to_counts[image.split("/")[-2]] += 1
-
-if __name__ == "__main__":
-    t = TattooImageFiles("images/downloaded")
-    t.status()
+        cursor.execute("INSERT INTO images (image_fn, image_bytes) VALUES (?, ?)", (image_fn, image_bytes))
+    conn.commit()

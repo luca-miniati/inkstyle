@@ -1,4 +1,5 @@
 api/__pycache__/
+inkstyle/.env
 api/images/
 api/embeddings.db
 api/images.db

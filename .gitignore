@@ -2,3 +2,4 @@ api/__pycache__/
 api/images/
 api/embeddings.db
 api/images.db
+.DS_Store

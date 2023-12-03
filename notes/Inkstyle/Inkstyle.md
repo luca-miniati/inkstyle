@@ -1,5 +1,5 @@
 ##### Frontend: Swift
-Wow look theres a flowchart
+Wow look a flowchart
 ![[flowchart.png]]
 ##### Backend: Flask API
 Endpoints:!

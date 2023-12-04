@@ -1,6 +1,8 @@
 ##### Frontend: Swift
 Wow look a flowchart
 ![[flowchart.png]]
+ChatGPT Prompts
+I am building a tattoo recommendation app in Flutter. 
 ##### Backend: Flask API
 Endpoints:!
 1. `images(n, offset)`

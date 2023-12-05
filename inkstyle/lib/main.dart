@@ -21,6 +21,10 @@ class InkstyleApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return CupertinoApp(
       title: 'Inkstyle',
+      theme: CupertinoThemeData(
+        brightness: Brightness.light,
+        primaryColor: CupertinoColors.systemBlue,
+      ),
       home: const AuthWrapper(),
     );
   }

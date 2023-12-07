@@ -6,8 +6,15 @@ import '../main/main.dart';
 
 class LoginPage extends StatefulWidget {
   final VoidCallback toggleAuthType;
+  final bool Function(String) isValidEmail;
+  final bool Function(dynamic) isValidPassword;
 
-  const LoginPage({Key? key, required this.toggleAuthType}) : super(key: key);
+  const LoginPage({
+    Key? key,
+    required this.toggleAuthType,
+    required this.isValidEmail,
+    required this.isValidPassword,
+  }) : super(key: key);
 
   @override
   State<LoginPage> createState() => _LoginPageState();  
@@ -17,9 +24,10 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final supabase = Supabase.instance.client;
   String _email = '';
-  List<String> _password = ['', ''];
-  bool _showEmailError = false;
-  bool _showPasswordError = false;
+  String _password = ''; 
+  bool _hidePassword = true;
+  bool _emailError = false;
+  bool _passwordError = false;
 
   @override
   Widget build(BuildContext context) {
@@ -43,10 +51,18 @@ class _LoginPageState extends State<LoginPage> {
               });
               if (widget.isValidEmail(_email)) {
                 setState(() {
-                  _showEmailError = false;
+                  _emailError = false;
                 });
               }
             },
+          ),
+          if (_emailError)
+          Padding(
+            child: Text(
+              'Please provide a valid email.',
+              style: TextStyle(color: Colors.red[500])
+            ),
+            padding: EdgeInsets.only(top: 6.0)
           ),
           SizedBox(height: 16.0),
           CupertinoTextField(
@@ -55,19 +71,39 @@ class _LoginPageState extends State<LoginPage> {
               padding: EdgeInsets.all(8.0),
               child: Icon(CupertinoIcons.lock_fill),
             ),
+            suffix: IconButton(
+              icon: Icon(
+                _hidePassword
+                ? CupertinoIcons.eye_slash_fill
+                : CupertinoIcons.eye_fill
+              ),
+              onPressed: () {
+                setState(() {
+                  _hidePassword = !_hidePassword;
+                });
+              }
+            ),
             padding: EdgeInsets.all(12.0),
             keyboardType: TextInputType.visiblePassword,
-            obscureText: true,
+            obscureText: _hidePassword,
             onChanged: (input) {
               setState(() {
                 _password = input;
               });
               if (widget.isValidPassword(_password)) {
                 setState(() {
-                  _showPasswordError = false;
+                  _passwordError = false;
                 });
               }
-            },
+            }
+          ),
+          if (_passwordError)
+          Padding(
+            child: Text(
+              'Password must be > 8 characters.',
+              style: TextStyle(color: Colors.red[500])
+            ),
+            padding: EdgeInsets.only(top: 6.0)
           ),
           SizedBox(height: 24.0),
           CupertinoButton(
@@ -76,30 +112,19 @@ class _LoginPageState extends State<LoginPage> {
             onPressed: () async {
               if (!widget.isValidEmail(_email)) {
                 setState(() {
-                  _showEmailError = true;
+                  _emailError = true;
                 });
-
-                return;
-              } else if (!widget.isValidPassword(_password)) {
+              }
+              if (!widget.isValidPassword(_password)) {
                 setState(() {
-                  _showPasswordError = true;
+                  _passwordError = true;
                 });
-
+              }
+              if (_emailError || _passwordError) {
                 return;
               }
 
               try {
-                final AuthResponse res = await supabase.auth.signUp(
-                  email: _email,
-                  password: _password,
-                );
-
-                Navigator.of(context).pushReplacement(
-                  CupertinoPageRoute(
-                    builder: (context) => MainPage(),
-                  ),
-                );
-              } on AuthException catch (e) {
                 final AuthResponse res = await supabase.auth.signInWithPassword(
                   email: _email,
                   password: _password,
@@ -110,6 +135,23 @@ class _LoginPageState extends State<LoginPage> {
                     builder: (context) => MainPage(),
                   ),
                 );
+              } on AuthException catch (e) {
+                showCupertinoModalPopup<void>(
+                  context: context,
+                  builder: (BuildContext context) => CupertinoAlertDialog(
+                    title: const Text('Account Error'),
+                    content: Text(e.message),
+                    actions: <CupertinoDialogAction>[
+                      CupertinoDialogAction(
+                        isDefaultAction: true,
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                        child: const Text('Ok'),
+                      ),
+                    ],
+                  ),
+                ); 
               }
             },
           ),

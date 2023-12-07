@@ -25,6 +25,20 @@ class _AuthPageState extends State<AuthPage> {
     return validEmailExp.hasMatch(input);
   }
 
+  bool isValidPassword(input) {
+    bool _isValidPassword(input) {
+      if (input.length < 8) return false;
+
+      return true;
+    }
+
+    if (input.runtimeType == String) {
+      return _isValidPassword(input);
+    } else {
+      return (_isValidPassword(input[0]) && _isValidPassword(input[1])) && (input[0].length == input[1].length);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
@@ -36,8 +50,8 @@ class _AuthPageState extends State<AuthPage> {
           padding: const EdgeInsets.all(16.0),
           child: Center(
             child: _authType == 1
-            ? LoginPage(toggleAuthType: toggleAuthType)
-            : RegisterPage(toggleAuthType: toggleAuthType, isValidEmail: isValidEmail),
+            ? LoginPage(toggleAuthType: toggleAuthType, isValidEmail: isValidEmail, isValidPassword: isValidPassword)
+            : RegisterPage(toggleAuthType: toggleAuthType, isValidEmail: isValidEmail, isValidPassword: isValidPassword),
           ),
         )
       )

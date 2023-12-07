@@ -2,14 +2,16 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../main/main.dart';
+import './login.dart';
 
 
 class RegisterPage extends StatefulWidget {
   final VoidCallback toggleAuthType;
   final bool Function(String) isValidEmail;
+  final bool Function(dynamic) isValidPassword;
 
   const RegisterPage(
-    {Key? key, required this.toggleAuthType, required this.isValidEmail}
+    {Key? key, required this.toggleAuthType, required this.isValidEmail, required this.isValidPassword}
   ) : super(key: key);
 
   @override
@@ -21,8 +23,10 @@ class _RegisterPageState extends State<RegisterPage> {
   final supabase = Supabase.instance.client;
   String _email = '';
   List<String> _password = ['', ''];
-  bool _showEmailError = false;
-  bool _showPasswordError = false;
+  List<bool> _hidePassword = [true, true];
+  bool _emailError = false;
+  bool _passwordError = false;
+  bool _passwordMatchError = false;
 
   @override
   Widget build(BuildContext context) {
@@ -46,49 +50,60 @@ class _RegisterPageState extends State<RegisterPage> {
               });
               if (widget.isValidEmail(_email)) {
                 setState(() {
-                  _showEmailError = false;
+                  _emailError = false;
                 });
               }
             },
             onEditingComplete: () {
               if (!widget.isValidEmail(_email)) {
                 setState(() {
-                  _showEmailError = true;
+                  _emailError = true;
                 });
               }
             },
           ),
-          SizedBox(height: 14.0),
-          if (_showEmailError)
-          Column(
-            children: [
-              Container(
-                child: Text("Provide a valid email. Or don't; I don't really care."),
-                decoration: BoxDecoration(
-                  color: Colors.red[200],
-                  borderRadius: BorderRadius.circular(8.0),
-                ),
-                padding: EdgeInsets.all(8.0),
-              ),
-              SizedBox(height: 14.0),
-            ]
+          if (_emailError)
+          Padding(
+            child: Text(
+              'Provide a valid email.',
+              style: TextStyle(color: Colors.red[500])
+            ),
+            padding: EdgeInsets.only(top: 6.0)
           ),
+          SizedBox(height: 14.0),
           CupertinoTextField(
             placeholder: 'Password',
             prefix: Padding(
-              padding: EdgeInsets.all(8.0),
-              child: Icon(CupertinoIcons.lock_fill),
+              padding: EdgeInsets.all(8.0), 
+              child: Icon(CupertinoIcons.lock_fill)
+            ),
+            suffix: IconButton(
+                icon: Icon(
+                  _hidePassword[0]
+                  ? CupertinoIcons.eye_slash_fill
+                  : CupertinoIcons.eye_fill
+                ),
+                onPressed: () {
+                  setState(() {
+                    _hidePassword[0] = !_hidePassword[0];
+                  });
+                }
             ),
             padding: EdgeInsets.all(12.0),
             keyboardType: TextInputType.visiblePassword,
-            obscureText: true,
+            obscureText: _hidePassword[0],
             onChanged: (input) {
               setState(() {
                 _password[0] = input;
               });
               if (widget.isValidPassword(_password)) {
                 setState(() {
-                  _showPasswordError = false;
+                  _passwordError = false;
+                });
+              }
+              if (_password[0] == _password[1]) {
+                setState(() {
+                  _passwordMatchError = false;
                 });
               }
             }
@@ -100,19 +115,52 @@ class _RegisterPageState extends State<RegisterPage> {
               padding: EdgeInsets.all(8.0),
               child: Icon(CupertinoIcons.lock_fill),
             ),
+            suffix: IconButton(
+              icon: Icon(
+                _hidePassword[1]
+                ? CupertinoIcons.eye_slash_fill
+                : CupertinoIcons.eye_fill
+              ),
+              onPressed: () {
+                setState(() {
+                  _hidePassword[1] = !_hidePassword[1];
+                });
+              }
+            ),
             padding: EdgeInsets.all(12.0),
             keyboardType: TextInputType.visiblePassword,
-            obscureText: true,
+            obscureText: _hidePassword[1],
             onChanged: (input) {
               setState(() {
                 _password[1] = input;
               });
               if (widget.isValidPassword(_password)) {
                 setState(() {
-                  _showPasswordError = false;
+                  _passwordError = false;
+                });
+              }
+              if (_password[0] == _password[1]) {
+                setState(() {
+                  _passwordMatchError = false;
                 });
               }
             }
+          ),
+          if (_passwordError)
+          Padding(
+            child: Text(
+              'Password must be > 8 characters.',
+              style: TextStyle(color: Colors.red[500])
+            ),
+            padding: EdgeInsets.only(top: 6.0)
+          ),
+          if (_passwordMatchError)
+          Padding(
+            child: Text(
+              'Passwords must match.',
+              style: TextStyle(color: Colors.red[500])
+            ),
+            padding: EdgeInsets.only(top: 6.0)
           ),
           SizedBox(height: 24.0),
           CupertinoButton.filled(
@@ -120,17 +168,23 @@ class _RegisterPageState extends State<RegisterPage> {
             onPressed: () async {
               if (!widget.isValidEmail(_email)) {
                 setState(() {
-                  _showEmailError = true;
+                  _emailError = true;
                 });
-
-                return;
-              } else if (!widget.isValidPassword(_password)) {
+              }
+              if (!widget.isValidPassword(_password[0])) {
                 setState(() {
-                  _showPasswordError = true;
+                  _passwordError = true;
                 });
-
+              }
+              if (_password[0] != _password[1]) {
+                setState(() {
+                  _passwordMatchError = true;
+                });
+              }
+              if (_emailError || _passwordError || _passwordMatchError) {
                 return;
               }
+
               try {
                 final AuthResponse res = await supabase.auth.signUp(
                   email: _email,
@@ -143,16 +197,49 @@ class _RegisterPageState extends State<RegisterPage> {
                   ),
                 );
               } on AuthException catch (e) {
-                final AuthResponse res = await supabase.auth.signInWithPassword(
-                  email: _email,
-                  password: _password[0],
-                );
+                if (e.message == 'User already registered') {
+                  showCupertinoModalPopup<void>(
+                    context: context,
+                    builder: (BuildContext context) => CupertinoAlertDialog(
+                      title: const Text('Account Error'),
+                      content: const Text('Account with this email already exists. Sign in?'),
+                      actions: <CupertinoDialogAction>[
+                        CupertinoDialogAction(
+                          isDefaultAction: true,
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                          child: const Text('Cancel'),
+                        ),
+                        CupertinoDialogAction(
+                          child: const Text('Sign in'),
+                          onPressed: () {
+                            Navigator.pop(context);
+                            widget.toggleAuthType();
+                          },
+                        ),
+                      ],
+                    ),
+                  ); 
+                } else {
+                  showCupertinoModalPopup<void>(
+                    context: context,
+                    builder: (BuildContext context) => CupertinoAlertDialog(
+                      title: const Text('Account Error'),
+                      content: Text(e.message),
+                      actions: <CupertinoDialogAction>[
+                        CupertinoDialogAction(
+                          isDefaultAction: true,
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                          child: const Text('Ok'),
+                        ),
+                      ],
+                    ),
+                  ); 
 
-                Navigator.of(context).pushReplacement(
-                  CupertinoPageRoute(
-                    builder: (context) => MainPage(),
-                  ),
-                );
+                }
               }
             },
           ),

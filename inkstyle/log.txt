@@ -1,0 +1,6 @@
+1702066633436:Ver:1702004558941729146696:unknown.client.classic:unknown:1.34.0:3.2.0
+1702066633450:Noti:{"event"::"server.connected","params"::{"version"::"1.34.0","pid"::24151}}
+1702066633453:Req:Content-Length:: 3872
+1702066633454:Res:{"id"::"","error"::{"code"::"INVALID_REQUEST","message"::"Invalid request"}}
+1702066633454:Req:
+1702066633454:Res:{"id"::"","error"::{"code"::"INVALID_REQUEST","message"::"Invalid request"}}

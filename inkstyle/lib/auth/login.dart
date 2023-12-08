@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../main/main.dart';
 
 
@@ -100,7 +101,7 @@ class _LoginPageState extends State<LoginPage> {
           if (_passwordError)
           Padding(
             child: Text(
-              'Password must be > 8 characters.',
+              'Password must be 8 characters or more.',
               style: TextStyle(color: Colors.red[500])
             ),
             padding: EdgeInsets.only(top: 6.0)
@@ -131,10 +132,11 @@ class _LoginPageState extends State<LoginPage> {
                 );
 
                 Navigator.of(context).pushReplacement(
-                  CupertinoPageRoute(
-                    builder: (context) => MainPage(),
-                  ),
-                );
+                        CupertinoPageRoute(
+                            builder: (context) => MainPage(),
+                            ),
+                        );
+
               } on AuthException catch (e) {
                 showCupertinoModalPopup<void>(
                   context: context,

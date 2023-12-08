@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../main/main.dart';
 import './login.dart';
 
@@ -191,11 +192,21 @@ class _RegisterPageState extends State<RegisterPage> {
                   password: _password[0],
                 );
 
-                Navigator.of(context).pushReplacement(
-                  CupertinoPageRoute(
-                    builder: (context) => MainPage(),
-                  ),
-                );
+                // if (res.session != null) {
+                //     if (accessToken == null || refreshToken == null || expiresAt == null) {
+                //         final storage = new FlutterSecureStorage();
+                //
+                //         await storage.write(key: 'accessToken', value: res.session?.accessToken);
+                //         await storage.write(key: 'refreshToken', value: res.session?.refreshToken);
+                //         await storage.write(key: 'expiresAt', value: res.session?.expiresAt);
+                //
+                        Navigator.of(context).pushReplacement(
+                                CupertinoPageRoute(
+                                    builder: (context) => MainPage(),
+                                    ),
+                                );
+                //     }
+                // }
               } on AuthException catch (e) {
                 if (e.message == 'User already registered') {
                   showCupertinoModalPopup<void>(

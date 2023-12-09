@@ -45,21 +45,32 @@ class _DiscoverPageState extends State<DiscoverPage> {
         Widget build(BuildContext context) {
             return CupertinoPageScaffold(
                     child: FutureBuilder<Uint8List?>(
-                    // https://bnuakobfluardglvfltt.supabase.co/storage/v1/object/public/images/images/<fn>
-                        future: downloadImage('_freddyleo_10.png'),
+                        future: _getImageFileNames(),
                         builder: (context, snapshot) {
                         if (snapshot.connectionState == ConnectionState.waiting) {
                         return CupertinoActivityIndicator();
-                        } else if (snapshot.hasError || snapshot.data == null) {
-                        return Icon(CupertinoIcons.book);
+                        } else if (snapshot.hasError) {
+                        return Column(
+                                children: <Widget>[
+                                Icon(CupertinoIcons.clear_fill),
+                                Text('An unexpected error ocurred.'),
+                                ],
+                                );
                         } else {
-                        return Image.memory(
-                                snapshot.data!,
+                        return CachedNetworkImage(
+                                imageUrl:'https://bnuakobfluardglvfltt.supabase.co/storage/v1/object/public/images/images/${snapsnot.data![_imageIdx]}',
                                 fit: BoxFit.cover,
+                                placeholder: (context, url) => CupertinoActivityIndicator(),
+                                errorWidget: (context, url, error) => Column(
+                                    children: <Widget>[
+                                    Icon(CupertinoIcons.clear_fill),
+                                    Text('An unexpected error ocurred.'),
+                                    ],
+                                    ),
                                 );
                         }
                         },
                         ),
-                    );
+                        );
         }
 }

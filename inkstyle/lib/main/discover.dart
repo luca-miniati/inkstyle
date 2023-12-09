@@ -1,59 +1,65 @@
 import 'dart:typed_data';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 
-class DiscoverPage extends StatelessWidget {
-    final supabase = Supabase.instance.client;
-    Future<List<FileObject>> _listFiles() async {
-        final response = await supabase.storage.from('images').list();
-        return response ?? [];
+class DiscoverPage extends StatefulWidget {
+    const DiscoverPage({super.key}); 
+
+    @override
+        State<DiscoverPage> createState() => _DiscoverPageState();
+}
+
+
+class _DiscoverPageState extends State<DiscoverPage> {
+    final _supabase = Supabase.instance.client;
+    final _imageIdx = 1;
+
+    Future<List<FileObject>> _getImageFileNames() async {
+        List<FileObject> fns = await _supabase.storage.from('images').list(path: 'images');
+        return fns;
     }
 
-    Future<Uint8List> _downloadFile(String fileName) async {
-        final response = await supabase.storage.from('images').download(fileName);
-        return response;
+    Future<Uint8List?> downloadImage(String fileName) async {
+        try {
+            final response = await _supabase.storage
+                .from('images')
+                .download('images/' + fileName);
+
+            if (response != null) {
+                return response;
+            } else {
+                print('Error downloading image: ${response.toString()}');
+                return null;
+            }
+        } catch (error) {
+            print('Error downloading image: $error');
+            return null;
+        }
     }
 
     @override
         Widget build(BuildContext context) {
             return CupertinoPageScaffold(
-                    navigationBar: CupertinoNavigationBar(
-                        middle: Text('Discover'),
-                        ),
-                    child: FutureBuilder<List<FileObject>>(
-                        future: _listFiles(),
+                    child: FutureBuilder<Uint8List?>(
+                    // https://bnuakobfluardglvfltt.supabase.co/storage/v1/object/public/images/images/<fn>
+                        future: downloadImage('_freddyleo_10.png'),
                         builder: (context, snapshot) {
                         if (snapshot.connectionState == ConnectionState.waiting) {
                         return CupertinoActivityIndicator();
-                        } else if (snapshot.hasError) {
-                        return Text('Error: ${snapshot.error}');
-                        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                        return Text('No images found.');
+                        } else if (snapshot.hasError || snapshot.data == null) {
+                        return Icon(CupertinoIcons.book);
                         } else {
-                        return ListView.builder(
-                                itemCount: snapshot.data!.length,
-                                itemBuilder: (context, index) {
-                                final fileObject = snapshot.data![index];
-                                return ListTile(
-                                        title: FutureBuilder<Uint8List>(
-                                            future: _downloadFile(fileObject.name),
-                                            builder: (context, snapshot) {
-                                            if (snapshot.connectionState == ConnectionState.waiting) {
-                                            return CupertinoActivityIndicator();
-                                            } else if (snapshot.hasError) {
-                                            return Text('Error downloading file: ${snapshot.error}');
-                                            } else {
-                                            return Image.memory(snapshot.data!);
-                                            }
-                                            },
-                                            ),
-                                        );
-                                },
+                        return Image.memory(
+                                snapshot.data!,
+                                fit: BoxFit.cover,
                                 );
                         }
-                        }
-            )
-            );
+                        },
+                        ),
+                    );
         }
 }

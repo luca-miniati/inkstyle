@@ -2,5 +2,6 @@ api/__pycache__/
 api/images/
 api/embeddings.db
 api/images.db
+api/node_modules
 .DS_Store
 *.env

@@ -17,8 +17,8 @@ class DiscoverPage extends StatefulWidget {
 
 class _DiscoverPageState extends State<DiscoverPage> {
     final SupabaseClient _supabase = Supabase.instance.client;
-    final int _imageIdx = 1;
-    final int _precacheOffset = 10;
+    int _batchIdx = 1;
+    final int _batchSize = 10;
 
     Future<List<FileObject>> _getImageFileNames() async {
         List<FileObject> fns = await _supabase.storage.from('images').list(path: 'images');
@@ -26,12 +26,12 @@ class _DiscoverPageState extends State<DiscoverPage> {
     }
 
     void _precacheImages(List<FileObject> filenames) {
-        for (final _filename in filenames) {
+        for (final filename in filenames) {
             precacheImage(
                     NetworkImage(
                         'https://bnuakobfluardglvfltt.supabase.co'
                         '/storage/v1/object/public/images/images'
-                        '/${_filename.name}'
+                        '/${filename.name}'
                         ),
                     context
                     );
@@ -40,9 +40,9 @@ class _DiscoverPageState extends State<DiscoverPage> {
     }
 
     Future<List<dynamic>> _getData() async {
-        final List<FileObject> _filenames = await _getImageFileNames();
-        _precacheImages(_filenames.sublist(0, _precacheOffset));
-        return _filenames;
+        final List<FileObject> filenames = await _getImageFileNames();
+        _precacheImages(filenames.sublist(0, _batchSize));
+        return filenames;
     }
 
     @override
@@ -52,40 +52,41 @@ class _DiscoverPageState extends State<DiscoverPage> {
                         future: _getData(),
                         builder: (context, snapshot) {
                         if (snapshot.connectionState == ConnectionState.waiting) {
-                        return CupertinoActivityIndicator();
+                        return const CupertinoActivityIndicator();
                         } else if (snapshot.hasError) {
                         return Column(
                                 children: <Widget>[
-                                Icon(CupertinoIcons.clear_fill),
+                                const Icon(CupertinoIcons.clear_fill),
                                 Text('An unexpected error ocurred: $snapshot.error'),
                                 ],
                                 );
                         } else {
-                        final List<FileObject> _imageFileNames = snapshot?.data as List<FileObject>;
+                        final List<FileObject> imageFileNames = snapshot.data as List<FileObject>;
 
                         return CardSwiper(
-                                cardsCount: _imageFileNames.length, 
+                                cardsCount: imageFileNames.length, 
                                 cardBuilder: (context, index, percentThresholdX, percentThresholdY) {
                                 return Card(
+                                        elevation: 10.0,
                                         child: CachedNetworkImage(
                                             imageUrl: 'https://bnuakobfluardglvfltt.supabase.co'
                                             '/storage/v1/object/public/images/images'
-                                            '/${_imageFileNames?[index].name ?? ''}',
+                                            '/${imageFileNames[index].name}',
                                             fit: BoxFit.contain,
-                                            placeholder: (context, url) => CupertinoActivityIndicator(),
-                                            errorWidget: (context, url, error) => Column(
+                                            placeholder: (context, url) => const CupertinoActivityIndicator(),
+                                            errorWidget: (context, url, error) => const Column(
                                                     children: <Widget>[
                                                     Icon(CupertinoIcons.clear_fill),
                                                     Text('An unexpected error ocurred.'),
                                                     ],
                                                     ),
                                             ),
-                                        elevation: 10.0,
                                         );
                                 },
                                 onSwipe: (oldIndex, currentIndex, swipeDirection) {
-                                    if (currentIndex! % 5 == 0) {
-                                        _precacheImages(_imageFileNames.sublist(currentIndex! + 5, currentIndex! + _precacheOffset));
+                                    if ((currentIndex! % _batchSize) == 7) {
+                                        _precacheImages(imageFileNames.sublist(_batchSize * _batchIdx, _batchSize * (_batchIdx + 1)));
+                                        _batchIdx += 1;
                                     }
                                     return true;
                                 },

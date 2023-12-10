@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -48,6 +46,7 @@ class _DiscoverPageState extends State<DiscoverPage> {
     @override
         Widget build(BuildContext context) {
             return CupertinoPageScaffold(
+                    child: Center(
                     child: FutureBuilder<List<dynamic>>(
                         future: _getData(),
                         builder: (context, snapshot) {
@@ -67,21 +66,31 @@ class _DiscoverPageState extends State<DiscoverPage> {
                                 cardsCount: imageFileNames.length, 
                                 cardBuilder: (context, index, percentThresholdX, percentThresholdY) {
                                 return Card(
-                                        elevation: 10.0,
-                                        child: CachedNetworkImage(
-                                            imageUrl: 'https://bnuakobfluardglvfltt.supabase.co'
-                                            '/storage/v1/object/public/images/images'
-                                            '/${imageFileNames[index].name}',
-                                            fit: BoxFit.contain,
-                                            placeholder: (context, url) => const CupertinoActivityIndicator(),
-                                            errorWidget: (context, url, error) => const Column(
-                                                    children: <Widget>[
-                                                    Icon(CupertinoIcons.clear_fill),
-                                                    Text('An unexpected error ocurred.'),
-                                                    ],
-                                                    ),
-                                            ),
-                                        );
+                                            elevation: 10.0,
+                                            surfaceTintColor: Colors.white,
+                                            child: Container(
+                                                width: 400,
+                                                height: 500,
+                                                child: Column(
+                                                    children: <Widget> [
+                                                    CachedNetworkImage(
+                                                        imageUrl: 'https://bnuakobfluardglvfltt.supabase.co'
+                                                        '/storage/v1/object/public/images/images'
+                                                        '/${imageFileNames[index].name}',
+                                                        fit: BoxFit.contain,
+                                                        placeholder: (context, url) => const CupertinoActivityIndicator(),
+                                                        errorWidget: (context, url, error) => const Column(
+                                                            children: <Widget>[
+                                                            Icon(CupertinoIcons.clear_fill),
+                                                            Text('An unexpected error ocurred.'),
+                                                            ],
+                                                            ),
+                                                        ),
+                                                    const Text("Artist: idk")
+                                                    ]
+                                                    )
+                                                    )
+                                                    );
                                 },
                                 onSwipe: (oldIndex, currentIndex, swipeDirection) {
                                     if ((currentIndex! % _batchSize) == 7) {
@@ -89,11 +98,12 @@ class _DiscoverPageState extends State<DiscoverPage> {
                                         _batchIdx += 1;
                                     }
                                     return true;
-                                },
-                                );
-                                }
-                        },
-                            ),
-                                );
+                                         },
+                                             );
                         }
+                        },
+                        ),
+                        ),
+                        );
         }
+}

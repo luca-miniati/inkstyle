@@ -5,8 +5,10 @@ import 'profile.dart';
 
 
 class MainPage extends StatefulWidget {
+    const MainPage({super.key});
+
   @override
-  _MainPageState createState() => _MainPageState();
+  State<MainPage> createState() => _MainPageState();
 }
 
 class _MainPageState extends State<MainPage> {
@@ -24,7 +26,7 @@ class _MainPageState extends State<MainPage> {
             _currentIndex = index;
           });
         },
-        items: [
+        items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
             icon: Icon(CupertinoIcons.star),
             label: 'Discover',
@@ -42,7 +44,7 @@ class _MainPageState extends State<MainPage> {
       tabBuilder: (context, index) {
         switch (index) {
           case 0:
-            return CupertinoTabView(builder: (context) => DiscoverPage());
+            return CupertinoTabView(builder: (context) => const DiscoverPage());
           case 1:
             return CupertinoTabView(builder: (context) => HomePage());
           case 2:

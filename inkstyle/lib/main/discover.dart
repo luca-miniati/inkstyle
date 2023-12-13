@@ -15,11 +15,22 @@ class DiscoverPage extends StatefulWidget {
 
 class _DiscoverPageState extends State<DiscoverPage> {
     final SupabaseClient _supabase = Supabase.instance.client;
+    int _chunkIdx = 0;
     int _batchIdx = 1;
     final int _batchSize = 10;
+    final int _chunkSize = 50;
+    final int _chunkThresh = 40;
 
-    Future<List<FileObject>> _getImageFileNames() async {
-        List<FileObject> fns = await _supabase.storage.from('images').list(path: 'images');
+    Future<List<FileObject>> _getImageFileNames(int chunkSize, int chunkIdx) async {
+        List<FileObject> fns = await _supabase.storage
+            .from('images')
+            .list(
+                    path: 'images',
+                    searchOptions: SearchOptions(
+                        limit: chunkSize,
+                        offset: chunkIdx * chunkSize
+                        )
+                 );
         return fns;
     }
 
@@ -37,8 +48,9 @@ class _DiscoverPageState extends State<DiscoverPage> {
         return;
     }
 
-    Future<List<dynamic>> _getData() async {
-        final List<FileObject> filenames = await _getImageFileNames();
+    Future<List<dynamic>> _getData(int chunkSize, int chunkIdx) async {
+        final List<FileObject> filenames = await _getImageFileNames(chunkSize, chunkIdx);
+        // Initial precache
         _precacheImages(filenames.sublist(0, _batchSize));
         return filenames;
     }
@@ -47,63 +59,70 @@ class _DiscoverPageState extends State<DiscoverPage> {
         Widget build(BuildContext context) {
             return CupertinoPageScaffold(
                     child: Center(
-                    child: FutureBuilder<List<dynamic>>(
-                        future: _getData(),
-                        builder: (context, snapshot) {
-                        if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const CupertinoActivityIndicator();
-                        } else if (snapshot.hasError) {
-                        return Column(
-                                children: <Widget>[
-                                const Icon(CupertinoIcons.clear_fill),
-                                Text('An unexpected error ocurred: $snapshot.error'),
-                                ],
-                                );
-                        } else {
-                        final List<FileObject> imageFileNames = snapshot.data as List<FileObject>;
+                            child: FutureBuilder<List<dynamic>>(
+                                future: _getData(_chunkSize, _chunkIdx),
+                                builder: (context, snapshot) {
+                                if (snapshot.connectionState == ConnectionState.waiting) {
+                                return const CupertinoActivityIndicator();
+                                } else if (snapshot.hasError) {
+                                return Column(
+                                        children: <Widget>[
+                                        const Icon(CupertinoIcons.clear_fill),
+                                        Text('An unexpected error ocurred: $snapshot.error'),
+                                        ],
+                                        );
+                                } else {
+                                List<FileObject> imageFileNames = snapshot.data as List<FileObject>;
 
-                        return CardSwiper(
-                                cardsCount: imageFileNames.length, 
-                                cardBuilder: (context, index, percentThresholdX, percentThresholdY) {
-                                return Card(
-                                            elevation: 10.0,
-                                            surfaceTintColor: Colors.white,
-                                            child: Container(
+                                return CardSwiper(
+                                                cardsCount: imageFileNames.length, 
+                                                numberOfCardsDisplayed: _batchSize,
+                                                backCardOffset: const Offset(0.0, 0.0),
+                                                cardBuilder: (context, index, percentThresholdX, percentThresholdY) {
+                                                return Column(
+                                                children : <Widget>[
+                                                const SizedBox(height: 50.0),
+                                                Container(
                                                 width: 400,
                                                 height: 500,
-                                                child: Column(
-                                                    children: <Widget> [
-                                                    CachedNetworkImage(
-                                                        imageUrl: 'https://bnuakobfluardglvfltt.supabase.co'
-                                                        '/storage/v1/object/public/images/images'
-                                                        '/${imageFileNames[index].name}',
-                                                        fit: BoxFit.contain,
-                                                        placeholder: (context, url) => const CupertinoActivityIndicator(),
-                                                        errorWidget: (context, url, error) => const Column(
-                                                            children: <Widget>[
-                                                            Icon(CupertinoIcons.clear_fill),
-                                                            Text('An unexpected error ocurred.'),
-                                                            ],
+                                                child: Card(
+                                                        elevation: 10.0,
+                                                        surfaceTintColor: Colors.white,
+                                                        clipBehavior: Clip.antiAlias,
+                                                        child: CachedNetworkImage(
+                                                            imageUrl: 'https://bnuakobfluardglvfltt.supabase.co'
+                                                            '/storage/v1/object/public/images/images'
+                                                            '/${imageFileNames[index].name}',
+                                                            fit: BoxFit.cover,
+                                                            placeholder: (context, url) => const CupertinoActivityIndicator(),
+                                                            errorWidget: (context, url, error) => const Column(
+                                                                children: <Widget>[
+                                                                Icon(CupertinoIcons.clear_fill),
+                                                                Text('An unexpected error ocurred.'),
+                                                                ],
+                                                                ),
                                                             ),
-                                                        ),
-                                                    const Text("Artist: idk")
+                                                            )
+                                                    )
                                                     ]
-                                                    )
-                                                    )
                                                     );
+                                                },
+onSwipe: (oldIndex, currentIndex, swipeDirection) {
+             if ((currentIndex! % _batchIdx) == 7) {
+                 _precacheImages(imageFileNames.sublist(_batchSize * _batchIdx, _batchSize * (_batchIdx + 1)));
+                 _batchIdx += 1;
+             }
+             if (_batchIdx * _batchSize > _chunkThresh) {
+                 _batchIdx = 0;
+                 _chunkIdx += 1;
+             }
+             return true;
+         },
+         );
+                                }
                                 },
-                                onSwipe: (oldIndex, currentIndex, swipeDirection) {
-                                    if ((currentIndex! % _batchSize) == 7) {
-                                        _precacheImages(imageFileNames.sublist(_batchSize * _batchIdx, _batchSize * (_batchIdx + 1)));
-                                        _batchIdx += 1;
-                                    }
-                                    return true;
-                                         },
-                                             );
-                        }
-                        },
-                        ),
-                        ),
-                        );
+                                ),
+                                ),
+                                );
         }
 }

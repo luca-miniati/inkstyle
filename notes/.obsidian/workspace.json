@@ -18,21 +18,8 @@
                 "source": false
               }
             }
-          },
-          {
-            "id": "030e0c89624fb228",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "Math 1365 Final Exam Notes.md",
-                "mode": "source",
-                "source": false
-              }
-            }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "vertical"
@@ -98,7 +85,6 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "Math 1365 Final Exam Notes.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -115,7 +101,6 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "Math 1365 Final Exam Notes.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               }
@@ -159,7 +144,7 @@
       "command-palette:Open command palette": false
     }
   },
-  "active": "030e0c89624fb228",
+  "active": "17b57a5cfd554338",
   "lastOpenFiles": [
     "Inkstyle/Inkstyle.md",
     "Math 1365 Final Exam Notes.md",

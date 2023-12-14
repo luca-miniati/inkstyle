@@ -2,6 +2,8 @@ import 'package:flutter/cupertino.dart';
 import 'discover.dart';
 import 'home.dart';
 import 'profile.dart';
+import 'tattoo_provider.dart';
+import 'package:provider/provider.dart';
 
 
 class MainPage extends StatefulWidget {
@@ -44,7 +46,10 @@ class _MainPageState extends State<MainPage> {
       tabBuilder: (context, index) {
         switch (index) {
           case 0:
-            return CupertinoTabView(builder: (context) => const DiscoverPage());
+            return CupertinoTabView(builder: (context) => ChangeNotifierProvider(
+                create: (context) => TattooProvider(),
+                child: DiscoverPage()
+                ));
           case 1:
             return CupertinoTabView(builder: (context) => HomePage());
           case 2:

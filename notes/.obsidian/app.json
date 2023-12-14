@@ -1,3 +1,10 @@
 {
-  "vimMode": true
+  "vimMode": true,
+  "pdfExportSettings": {
+    "includeName": false,
+    "pageSize": "Letter",
+    "landscape": true,
+    "margin": "1",
+    "downscalePercent": 100
+  }
 }

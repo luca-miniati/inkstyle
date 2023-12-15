@@ -57,3 +57,21 @@ class TattooProvider extends ChangeNotifier {
         return completer.future;
     }
 }
+
+
+class AppState extends ChangeNotifier {
+    int _navbarIndex = 1;
+    int get navbarIndex => _navbarIndex;
+
+    int _imageIndex = 0;
+    int get imageIndex => _imageIndex;
+
+    incrementImageIndex() {
+        _imageIndex++;
+    }
+
+    setNavbarIndex(index) {
+        _navbarIndex = index;
+        notifyListeners();
+    }
+}

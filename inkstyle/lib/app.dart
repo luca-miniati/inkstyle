@@ -29,7 +29,7 @@ class InkstyleApp extends StatelessWidget {
                         brightness: Brightness.light,
                         primaryColor: CupertinoColors.darkBackgroundGray,
                         ),
-                    home: const SplashPage()
+                    home: SplashPage()
                     );
         }
 }

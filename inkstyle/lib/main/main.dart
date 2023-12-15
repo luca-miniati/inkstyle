@@ -1,63 +1,53 @@
 import 'package:flutter/cupertino.dart';
+import 'package:provider/provider.dart';
 import 'discover.dart';
 import 'home.dart';
 import 'profile.dart';
-import 'tattoo_provider.dart';
-import 'package:provider/provider.dart';
+import 'state.dart';
 
 
-class MainPage extends StatefulWidget {
+class MainPage extends StatelessWidget {
     const MainPage({super.key});
 
-  @override
-  State<MainPage> createState() => _MainPageState();
-}
-
-class _MainPageState extends State<MainPage> {
-  int _currentIndex = 1;
-
-  @override
-  Widget build(BuildContext context) {
-    
-
-    return CupertinoTabScaffold(
-      tabBar: CupertinoTabBar(
-        currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(CupertinoIcons.star),
-            label: 'Discover',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(CupertinoIcons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(CupertinoIcons.person),
-            label: 'Profile',
-          ),
-        ],
-      ),
-      tabBuilder: (context, index) {
-        switch (index) {
-          case 0:
-            return CupertinoTabView(builder: (context) => ChangeNotifierProvider(
-                create: (context) => TattooProvider(),
-                child: DiscoverPage()
-                ));
-          case 1:
+    @override
+        Widget build(BuildContext context) {
+            return ChangeNotifierProvider(
+                    create: (context) => AppState(),
+                    child: Consumer<AppState>(
+                    builder: (_, appState, __) => CupertinoTabScaffold(
+                        tabBar: CupertinoTabBar(
+                            currentIndex: appState.navbarIndex,
+                            onTap: (index) {
+                                appState.setNavbarIndex(index);
+                            },
+items: const <BottomNavigationBarItem>[
+BottomNavigationBarItem(
+    icon: Icon(CupertinoIcons.star),
+    label: 'Discover',
+    ),
+BottomNavigationBarItem(
+    icon: Icon(CupertinoIcons.home),
+    label: 'Home',
+    ),
+BottomNavigationBarItem(
+    icon: Icon(CupertinoIcons.person),
+    label: 'Profile',
+    ),
+],
+),
+tabBuilder: (context, index) {
+    switch (index) {
+        case 0:
+            return CupertinoTabView(builder: (context) =>  const DiscoverPage());
+        case 1:
             return CupertinoTabView(builder: (context) => HomePage());
-          case 2:
+        case 2:
             return CupertinoTabView(builder: (context) => ProfilePage());
-          default:
+        default:
             return CupertinoTabView(builder: (context) => Container());
-        }
-      },
+    }
+},
+    ),
     );
-  }
+}
 }

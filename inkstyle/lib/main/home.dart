@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+  print("building home");
     return CupertinoPageScaffold(
       navigationBar: CupertinoNavigationBar(
         middle: Text('Home'),

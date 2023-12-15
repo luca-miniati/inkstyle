@@ -14,40 +14,43 @@ class MainPage extends StatelessWidget {
             return ChangeNotifierProvider(
                     create: (context) => AppState(),
                     child: Consumer<AppState>(
-                    builder: (_, appState, __) => CupertinoTabScaffold(
-                        tabBar: CupertinoTabBar(
-                            currentIndex: appState.navbarIndex,
-                            onTap: (index) {
-                                appState.setNavbarIndex(index);
-                            },
-items: const <BottomNavigationBarItem>[
-BottomNavigationBarItem(
-    icon: Icon(CupertinoIcons.star),
-    label: 'Discover',
-    ),
-BottomNavigationBarItem(
-    icon: Icon(CupertinoIcons.home),
-    label: 'Home',
-    ),
-BottomNavigationBarItem(
-    icon: Icon(CupertinoIcons.person),
-    label: 'Profile',
-    ),
-],
-),
-tabBuilder: (context, index) {
-    switch (index) {
-        case 0:
-            return CupertinoTabView(builder: (context) =>  const DiscoverPage());
-        case 1:
-            return CupertinoTabView(builder: (context) => HomePage());
-        case 2:
-            return CupertinoTabView(builder: (context) => ProfilePage());
-        default:
-            return CupertinoTabView(builder: (context) => Container());
-    }
-},
-    ),
-    );
-}
+                        builder: (_, appState, __) => CupertinoTabScaffold(
+                            tabBar: CupertinoTabBar(
+                                currentIndex: appState.navbarIndex,
+                                onTap: (index) {
+                                    if (index != appState.navbarIndex) {
+                                        appState.setNavbarIndex(index);
+                                    }
+                                },
+                            items: const <BottomNavigationBarItem>[
+                            BottomNavigationBarItem(
+                                icon: Icon(CupertinoIcons.star),
+                                label: 'Discover',
+                                ),
+                            BottomNavigationBarItem(
+                                icon: Icon(CupertinoIcons.home),
+                                label: 'Home',
+                                ),
+                            BottomNavigationBarItem(
+                                icon: Icon(CupertinoIcons.person),
+                                label: 'Profile',
+                                ),
+                            ],
+                            ),
+                    tabBuilder: (context, index) {
+                        switch (index) {
+                            case 0:
+                                return CupertinoTabView(builder: (context) => DiscoverPage());
+                            case 1:
+                                return CupertinoTabView(builder: (context) => HomePage());
+                            case 2:
+                                return CupertinoTabView(builder: (context) => ProfilePage());
+                            default:
+                                return CupertinoTabView(builder: (context) => Container());
+                        }
+                    },
+                    ),
+                    ),
+                    );
+        }
 }

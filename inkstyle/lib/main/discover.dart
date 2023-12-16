@@ -4,6 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_card_swiper/flutter_card_swiper.dart';
 import 'package:provider/provider.dart';
 import 'state.dart';
+import 'widgets.dart';
 
 
 class DiscoverPage extends StatefulWidget {
@@ -30,16 +31,26 @@ class _DiscoverPageState extends State<DiscoverPage> {
                             } else if (appState.isObserving) {
                                     // Observation code
                                     appState.resetIndex();
-                                    print("Building DiscoverPage.");
-                                    print("appState.tattoos.length: ${appState.tattoos.length}");
-                                    print("appState.imageIndex: ${appState.imageIndex}");
                                     return CupertinoPageScaffold(
                                         child: Center(
-                                            child: CardSwiper(
+                                        child: Column(
+                                            children: <Widget>[
+                                            Container(
+                                                height: 600.0,
+                                                child: CardSwiper(
                                                         cardsCount: appState.tattoos.length,
                                                         numberOfCardsDisplayed: appState.tattoos.length,
                                                         backCardOffset: const Offset(0.0, 0.0),
                                                         onSwipe: (oldIndex, currentIndex, direction) {
+                                                            bool liked;
+                                                            if (direction == CardSwiperDirection.left) {
+                                                            liked = false;
+                                                            } else if (direction == CardSwiperDirection.right) {
+                                                            liked = true;
+                                                            } else {
+                                                            liked = true;
+                                                            }
+                                                            appState.setDecision(oldIndex, liked);
                                                             appState.setImageIndex(currentIndex);
                                                             return true;
                                                         },
@@ -68,12 +79,25 @@ class _DiscoverPageState extends State<DiscoverPage> {
                                                                                 ),
                                                                             ),
                                                                         )
-                                                                        )
+                                                                        ),
                                                                         ]
                                                                         );
                                                         }
                                                         ),
-                                                            ),
+                                                        ),
+                                                Card(
+                                                        surfaceTintColor: Colors.white,
+                                                child: Decisions(
+                                                    decisions: appState.decisions,
+                                                    batchSize: appState.batchSize,
+                                                    decisionIndicatorWidth: 25.0,
+                                                    decisionIndicatorBorderRadius: 4.0,
+                                                    spacerWidth: 25.0 * 0.20,
+                                                ),
+                                                ),
+                                                ],
+                                                        ),
+                                                        ),
                                                             );
                             } else {
                                 // Implement Updating screen 

@@ -3,6 +3,13 @@ import 'dart:async';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 
+class Decision {
+    final bool liked;
+    final Tattoo tattoo;
+
+    Decision({required this.liked, required this.tattoo});
+}
+
 class Tattoo {
     final String imageUrl;
 
@@ -38,7 +45,6 @@ class TattooProvider extends ChangeNotifier {
             .map((fileObject) => Tattoo(imageUrl: fileObject.name))
             .toList();
         _tattoos.addAll(newTattoos);
-        print("added ${newTattoos.length} images.");
         return; 
     }
 
@@ -71,10 +77,15 @@ class AppState extends ChangeNotifier {
     int get imageIndex => _imageIndex;
 
     final int _batchSize = 10;
+    int get batchSize => _batchSize;
 
     final SupabaseClient _supabase = Supabase.instance.client;
     final List<Tattoo> _tattoos = [];
     List<Tattoo> get tattoos => _tattoos;
+
+    // final List<Decision> _decisions = [];
+    final List<dynamic> _decisions = List.filled(10, null); 
+    List<dynamic> get decisions => _decisions;
 
     toggleIsObserving() {
         _isObserving = !_isObserving;
@@ -107,9 +118,11 @@ class AppState extends ChangeNotifier {
         _tattoos.clear();
     }
 
+    setDecision(index, liked) {
+        _decisions[index] = Decision(liked: liked, tattoo: _tattoos[index]);
+    }
 
     Future<bool> fetchImages() async {
-        print("navbarIndex: $_navbarIndex");
         // check if user is on DiscoverPage
         if (_navbarIndex != 0) {
             return true;

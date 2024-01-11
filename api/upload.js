@@ -11,7 +11,7 @@ const supabase = createClient(
 
 async function uploadFile(filePathFull, filePath) {
   const fileContent = fs.readFileSync(filePathFull);
-  const { data, error } = await supabase.storage.from('images').upload(filePath, fileContent);
+  const { _, error } = await supabase.storage.from('images').upload(filePath, fileContent);
   if (error) {
     console.log(error.message);
   }

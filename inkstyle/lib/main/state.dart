@@ -2,154 +2,104 @@ import 'package:flutter/cupertino.dart';
 import 'dart:async';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-
 class Decision {
-    final bool liked;
-    final Tattoo tattoo;
+  final bool liked;
+  final Tattoo tattoo;
 
-    Decision({required this.liked, required this.tattoo});
+  Decision({required this.liked, required this.tattoo});
 }
 
 class Tattoo {
-    final String imageUrl;
+  final String imageUrl;
 
-    Tattoo({required this.imageUrl});
+  Tattoo({required this.imageUrl});
 }
-
-
-class TattooProvider extends ChangeNotifier {
-    final List<Tattoo> _tattoos = [];
-    int _batchIdx = 0;
-    final int _batchSize = 10;
-    final SupabaseClient _supabase = Supabase.instance.client;
-
-    List<Tattoo> get tattoos => _tattoos;
-    int get batchSize => _batchSize;
-
-    void incrementBatchIdx() {
-        _batchIdx++;
-    }
-
-    Future<void> extendTattoos() async {
-        List<FileObject> fileObjects = await _supabase.storage
-            .from('images')
-            .list(
-                    path: 'images',
-                    searchOptions: SearchOptions(
-                        limit: _batchSize,
-                        offset: _batchSize * _batchIdx, 
-                        )
-                 );
-                 
-        List<Tattoo> newTattoos = fileObjects
-            .map((fileObject) => Tattoo(imageUrl: fileObject.name))
-            .toList();
-        _tattoos.addAll(newTattoos);
-        return; 
-    }
-
-    Future<void> loadTattoos() async {
-        Completer<void> completer = Completer<void>();
-        try {
-            // if current page is greater than number of batches loaded
-            // e.g. Do we have any images to load?
-            if (_batchIdx >= (_tattoos.length ~/ _batchSize)) {
-                await extendTattoos();
-            }
-            completer.complete();
-        } catch (e) {
-            completer.completeError(e);
-        }
-        return completer.future;
-    }
-}
-
 
 class AppState extends ChangeNotifier {
-    bool _isObserving = true;
-    bool get isObserving => _isObserving;
+  bool _loading = true;
+  bool get loading => _loading;
 
-    int _navbarIndex = 1;
-    int get navbarIndex => _navbarIndex;
+  String _error = "";
+  String get error => _error;
 
-    // Index of -1 means we haven't yet started swiping
-    int _imageIndex = -1;
-    int get imageIndex => _imageIndex;
+  bool _observing = true;
+  bool get observing => _observing;
 
-    final int _batchSize = 10;
-    int get batchSize => _batchSize;
+  int _navbarIndex = 1;
+  int get navbarIndex => _navbarIndex;
 
-    final SupabaseClient _supabase = Supabase.instance.client;
-    final List<Tattoo> _tattoos = [];
-    List<Tattoo> get tattoos => _tattoos;
+  int _imageIndex = 0;
+  int get imageIndex => _imageIndex;
 
-    // final List<Decision> _decisions = [];
-    final List<dynamic> _decisions = List.filled(10, null); 
-    List<dynamic> get decisions => _decisions;
+  final int _batchSize = 10;
+  int get batchSize => _batchSize;
 
-    toggleIsObserving() {
-        _isObserving = !_isObserving;
+  final int _cardsDisplayed = 3;
+  int get cardsDisplayed => _cardsDisplayed;
+
+  final SupabaseClient _supabase = Supabase.instance.client;
+  final List<Tattoo> _tattoos = [];
+  List<Tattoo> get tattoos => _tattoos;
+
+  final List<dynamic> _decisions = List.filled(10, null);
+  List<dynamic> get decisions => _decisions;
+
+  incrementImageIndex() {
+    _imageIndex += 1;
+  }
+
+  setNavbarIndex(index) {
+    _navbarIndex = index;
+    notifyListeners();
+  }
+
+  setDecision(liked) {
+    _decisions[_imageIndex] =
+        Decision(liked: liked, tattoo: _tattoos[_imageIndex]);
+
+    if (_imageIndex == _batchSize - 1) {
+      _observing = false;
     }
 
-    setIsObserving() {
-        _isObserving = true;
+    notifyListeners();
+  }
+
+  Future<void> fetchImages() async {
+    // check if user is on DiscoverPage
+    if (_navbarIndex != 0) {
+      return;
     }
 
-    unsetIsObserving() {
-        _isObserving = false;
+    if (_tattoos.isNotEmpty) {
+      return;
     }
 
-    setImageIndex(index) {
-        _imageIndex = index;
-    }
+    _loading = true;
+    notifyListeners();
 
-    setNavbarIndex(index) {
-        _navbarIndex = index;
-        notifyListeners();
-    }
-
-    resetIndex() {
-        if (_navbarIndex == 0) {
-            _imageIndex = 0;
-        }
-    }
-
-    clearTattoos() {
-        _tattoos.clear();
-    }
-
-    setDecision(index, liked) {
-        _decisions[index] = Decision(liked: liked, tattoo: _tattoos[index]);
-    }
-
-    Future<bool> fetchImages() async {
-        // check if user is on DiscoverPage
-        if (_navbarIndex != 0) {
-            return true;
-        }
-
-        if (_tattoos.isNotEmpty) {
-            List<Tattoo> sublist = _tattoos.sublist(_imageIndex, _tattoos.length);
-            _tattoos.clear();
-            _tattoos.addAll(sublist);
-            return true;
-        }
-
-        // TODO: 
-        // (1) Only get images user has not seen
-        // (2) Random selection
-        // (3) 70% Recommendations, 30% random
-        List<Tattoo> data = await _supabase.storage
-            .from('images')
-            .list(
-                    path: 'images',
-                    searchOptions: SearchOptions(
-                            limit: _batchSize,
-                            )
-                     )
-            .then((response) => response.map((fileObject) => Tattoo(imageUrl: fileObject.name)).toList());
-
+    // TODO:
+    // (1) Only get images user has not seen
+    // (2) Random selection
+    // (3) 70% Recommendations, 30% random
+    try {
+    List<Tattoo> data = await _supabase.storage
+        .from('images')
+        .list(
+            path: 'images',
+            searchOptions: SearchOptions(
+              limit: _batchSize,
+            ))
+        .then((response) => response
+            .map((fileObject) => Tattoo(imageUrl: fileObject.name))
+            .toList());
         _tattoos.addAll(data);
-        return true; 
+    } catch (e) {
+        _error = e.toString();
     }
+
+    _loading = false;
+    notifyListeners();
+
+    return;
+  }
 }

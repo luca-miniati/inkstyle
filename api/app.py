@@ -1,10 +1,18 @@
+import os
 from flask import Flask, jsonify, send_file, request
 from io import BytesIO
 import sqlite3
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
+from supabase import create_client
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = Flask(__name__)
+
+URL = os.environ.get("SUPABASE_URL")
+KEY = os.environ.get("SUPABASE_KEY")
 
 
 @app.route("/api/images", methods=["GET"])
@@ -91,6 +99,37 @@ def get_recommendations():
     )
 
     return jsonify(sorted_fns)[:10]
+
+
+@app.route("/api/embeddings", methods=["GET"])
+def update_user_embedding():
+    user_id = request.get_data("user_id")
+    ratings = request.get_data("ratings")
+    rating_image_ids = [rating['image_id'] for rating in ratings]
+
+    supabase = create_client(URL, KEY)
+
+    # TODO: PUT LIMIT ON SUPABASE SOMEHOW
+    user_embedding = supabase.storage.get_bucket('user_embeddings') \
+        .list('embeddings', {'search': user_id, 'limit': 5000})
+
+    # TODO: PUT LIMIT ON SUPABASE SOMEHOW
+    image_embeddings = filter(
+        lambda x: x['name'] in rating_image_ids,
+        supabase.storage.get_bucket('image_embeddings')
+        .list('embeddings', {'limit': 5000})
+    )
+
+    if user_embedding:
+        # find cosine similarities
+        image_ids = image_embeddings
+        pass
+    else:
+        # grab first 10
+        image_ids = 'first 10 images'
+        pass
+
+    return image_ids
 
 
 if __name__ == "__main__":

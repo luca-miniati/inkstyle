@@ -25,3 +25,28 @@ Recommendation Algorithm:
 	- Score all images against user's selected images
 6. Feedback Loop
 	- Adjust algo
+
+## significant progress
+First, user opens app
+* client sends user id, ratings to api (recommendations endpoint) at this point, ratings are null
+* server fetches user embedding from supabase bucket
+* server fetches image embeddings from supabase bucket
+* server updates user embeddings, using image embeddings
+* server fetches like 15 image embeddings from supabase bucket
+* if user id has user embedding, use it to threshold those cosine similarities
+* otherwise, just grab the first 10
+* Do this until we have >=10 valid images to recommend
+* server send the image_ids of the embeddings to client
+
+forever
+* client fetches images from supabase bucket, using image_ids
+* client runs card swiper on new images
+* client sends user id, ratings to api (algorithm endpoint)
+* server fetches user embedding from supabase bucket
+* server fetches image embeddings from supabase bucket
+* server updates user embeddings, using image embeddings
+* server fetches like 15 image embeddings from supabase bucket
+* if user id has user embedding, use it to threshold those cosine similarities
+* otherwise, just grab the first 10
+* Do this until we have >=10 valid images to recommend
+* server send the image_ids of the embeddings to client

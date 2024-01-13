@@ -1,6 +1,6 @@
-api/__pycache__/
-api/images/
-api/embeddings/
+api/__pycache__
+api/images
+api/embeddings
 api/embeddings.db
 api/images.db
 api/node_modules

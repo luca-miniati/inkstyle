@@ -31,7 +31,7 @@ First, user opens app
 * client sends user id, ratings to api (recommendations endpoint) at this point, ratings are null
 * server fetches user embedding from supabase bucket
 * server fetches image embeddings from supabase bucket
-* server updates user embeddings, using image embeddings
+* server updates user embeddings, using rating image embeddings
 * server fetches like 15 image embeddings from supabase bucket
 * if user id has user embedding, use it to threshold those cosine similarities
 * otherwise, just grab the first 10

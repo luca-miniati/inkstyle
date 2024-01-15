@@ -37,38 +37,9 @@ class _AuthPageState extends State<AuthPage> {
     }
   }
 
-  // Future<bool> isValidStorage() async {
-  //     final String? accessToken = await _storage.read(key: 'accessToken');
-  //     final String? refreshToken = await _storage.read(key: 'refreshToken');
-  //     final String? expiresAt = await _storage.read(key: 'expiresAt');
-  //
-  //     if (accessToken == null || refreshToken == null || expiresAt == null) {
-  //         return false;
-  //     }
-  //
-  //     final int now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
-  //     if (now > int.parse(expiresAt)) {
-  //         try {
-  //             final res = await _supabase.auth.api.signInWithRefreshToken(refreshToken);
-  //
-  //             if (res.error == null) {
-  //                 return true;
-  //             }
-  //         } catch (error) {
-  //             return false;
-  //         }
-  //     } else {
-  //         JWT res = JWT.verify(accessToken, SecretKey(dotenv.env['SUPABASE_JWT_SECRET'] ?? ''));
-  //         print(res);
-  //     }
-  // }
-
   @override
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
-        navigationBar: const CupertinoNavigationBar(
-          middle: Text('Inkstyle'),
-        ),
         child: SafeArea(
             child: Padding(
           padding: const EdgeInsets.all(16.0),

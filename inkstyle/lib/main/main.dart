@@ -24,15 +24,12 @@ class MainPage extends StatelessWidget {
             items: const <BottomNavigationBarItem>[
               BottomNavigationBarItem(
                 icon: Icon(CupertinoIcons.star),
-                label: 'Discover',
               ),
               BottomNavigationBarItem(
                 icon: Icon(CupertinoIcons.home),
-                label: 'Home',
               ),
               BottomNavigationBarItem(
                 icon: Icon(CupertinoIcons.person),
-                label: 'Profile',
               ),
             ],
           ),

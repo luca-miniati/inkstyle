@@ -1,0 +1,10 @@
+numpy
+torch
+supabase
+python-dotenv
+matplotlib
+pillow
+torchvision
+sqlite3
+Flask
+scikit-learn

@@ -4,7 +4,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../main/main.dart';
 
-
 class LoginPage extends StatefulWidget {
   final VoidCallback toggleAuthType;
   final bool Function(String) isValidEmail;
@@ -18,14 +17,13 @@ class LoginPage extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<LoginPage> createState() => _LoginPageState();  
+  State<LoginPage> createState() => _LoginPageState();
 }
-
 
 class _LoginPageState extends State<LoginPage> {
   final supabase = Supabase.instance.client;
   String _email = '';
-  String _password = ''; 
+  String _password = '';
   bool _hidePassword = true;
   bool _emailError = false;
   bool _passwordError = false;
@@ -58,54 +56,44 @@ class _LoginPageState extends State<LoginPage> {
             },
           ),
           if (_emailError)
-          Padding(
-            child: Text(
-              'Please provide a valid email.',
-              style: TextStyle(color: Colors.red[500])
-            ),
-            padding: EdgeInsets.only(top: 6.0)
-          ),
+            Padding(
+                child: Text('Please provide a valid email.',
+                    style: TextStyle(color: Colors.red[500])),
+                padding: EdgeInsets.only(top: 6.0)),
           SizedBox(height: 16.0),
           CupertinoTextField(
-            placeholder: 'Password',
-            prefix: Padding(
-              padding: EdgeInsets.all(8.0),
-              child: Icon(CupertinoIcons.lock_fill),
-            ),
-            suffix: IconButton(
-              icon: Icon(
-                _hidePassword
-                ? CupertinoIcons.eye_slash_fill
-                : CupertinoIcons.eye_fill
+              placeholder: 'Password',
+              prefix: Padding(
+                padding: EdgeInsets.all(8.0),
+                child: Icon(CupertinoIcons.lock_fill),
               ),
-              onPressed: () {
+              suffix: IconButton(
+                  icon: Icon(_hidePassword
+                      ? CupertinoIcons.eye_slash_fill
+                      : CupertinoIcons.eye_fill),
+                  onPressed: () {
+                    setState(() {
+                      _hidePassword = !_hidePassword;
+                    });
+                  }),
+              padding: EdgeInsets.all(12.0),
+              keyboardType: TextInputType.visiblePassword,
+              obscureText: _hidePassword,
+              onChanged: (input) {
                 setState(() {
-                  _hidePassword = !_hidePassword;
+                  _password = input;
                 });
-              }
-            ),
-            padding: EdgeInsets.all(12.0),
-            keyboardType: TextInputType.visiblePassword,
-            obscureText: _hidePassword,
-            onChanged: (input) {
-              setState(() {
-                _password = input;
-              });
-              if (widget.isValidPassword(_password)) {
-                setState(() {
-                  _passwordError = false;
-                });
-              }
-            }
-          ),
+                if (widget.isValidPassword(_password)) {
+                  setState(() {
+                    _passwordError = false;
+                  });
+                }
+              }),
           if (_passwordError)
-          Padding(
-            child: Text(
-              'Password must be 8 characters or more.',
-              style: TextStyle(color: Colors.red[500])
-            ),
-            padding: EdgeInsets.only(top: 6.0)
-          ),
+            Padding(
+                child: Text('Password must be 8 characters or more.',
+                    style: TextStyle(color: Colors.red[500])),
+                padding: EdgeInsets.only(top: 6.0)),
           SizedBox(height: 24.0),
           CupertinoButton(
             child: Text('Log In', style: TextStyle(color: Colors.black)),
@@ -132,11 +120,10 @@ class _LoginPageState extends State<LoginPage> {
                 );
 
                 Navigator.of(context).pushReplacement(
-                        CupertinoPageRoute(
-                            builder: (context) => MainPage(),
-                            ),
-                        );
-
+                  CupertinoPageRoute(
+                    builder: (context) => MainPage(),
+                  ),
+                );
               } on AuthException catch (e) {
                 showCupertinoModalPopup<void>(
                   context: context,
@@ -153,14 +140,12 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ],
                   ),
-                ); 
+                );
               }
             },
           ),
           Padding(
-            padding: EdgeInsets.all(16.0),
-            child: Divider(endIndent: 14.0)
-          ),
+              padding: EdgeInsets.all(16.0), child: Divider(endIndent: 14.0)),
           Text("Don't have an account?"),
           SizedBox(height: 24.0),
           CupertinoButton.filled(
@@ -172,4 +157,3 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 }
-
